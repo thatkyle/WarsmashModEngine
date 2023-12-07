@@ -253,16 +253,39 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.reviving;
 	}
 
-	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
-		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
-		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
-		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
-				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
+  private void levelUpHero(final CSimulation simulation, final CUnit unit) {
+    final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
+    while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
+        && (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
 			this.heroLevel++;
 			this.skillPoints++;
 			calculateDerivatedFields(simulation, unit);
 			simulation.unitGainLevelEvent(unit);
 		}
+  }
+
+	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
+		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
+		levelUpHero(simulation, unit);
+		unit.internalPublishHeroStatsChanged();
+	}
+
+  public void resetHero(final CSimulation simulation, final CUnit unit) {
+    setHeroLevel(simulation, unit, 1, false);
+    setSkillPoints(0);
+    calculateDerivatedFields(simulation, unit);
+    for (final CAbility ability : unit.getAbilities()) {
+      unit.remove(simulation, ability);
+    }
+  }
+
+	public void setXp(final CSimulation simulation, final CUnit unit, final int xp) {
+    final int newXpVal = xp * Math.round(simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP());
+    if (newXpVal < this.xp) {
+      resetHero(simulation, unit);
+    }
+		setXp(newXpVal);
+		levelUpHero(simulation, unit);
 		unit.internalPublishHeroStatsChanged();
 	}
 
