@@ -20,7 +20,6 @@ public class JassTriggerSleepActionFunction implements JassFunction{
   @Override
   public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
       final TriggerExecutionScope triggerScope) {
-    // triggerScope.setSleepTime(this.sleepTime);
     return null;
   }
 }

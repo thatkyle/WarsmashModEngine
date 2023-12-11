@@ -12,7 +12,6 @@ import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.DebuggingJassFunction;
 import com.etheller.interpreter.ast.debug.JassStackElement;
 import com.etheller.interpreter.ast.function.JassFunction;
-import com.etheller.interpreter.ast.function.JassTriggerSleepActionFunction;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
@@ -36,7 +35,6 @@ public final class GlobalScope {
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
-  private final ArrayDeque<QueuedCallback> sleepingTriggers = new ArrayDeque<>();
 
 	public final HandleJassType handleType;
 
@@ -228,23 +226,6 @@ public final class GlobalScope {
 			this.triggerQueue.add(new QueuedTrigger(filter, filterScope, trigger, evaluateScope, executeScope));
 		}
 	}
-
-  public void dequeueSleepingTrigger(QueuedCallback trigger) {
-   this.runningTriggerQueue.remove(trigger);
-   this.triggerQueue.remove(trigger);
-  }
-    
-  public void queueSleepingTrigger(final TriggerBooleanExpression filter, final TriggerExecutionScope filterScope,
-    final QueuedCallback trigger, final TriggerExecutionScope evaluateScope,
-    final TriggerExecutionScope executeScope) {
-    dequeueSleepingTrigger(trigger);
-    this.sleepingTriggers.add(trigger);
-    final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) trigger;
-    final double sleepTime = sleepAction.getSleepTime();
-    final long sleepTimeMillis = (long) (sleepTime * 1000);
-    final GlobalScope globalScope = this;
-    
-  }
 
 	public void queueFunction(final JassFunction function, final TriggerExecutionScope scope) {
 		this.triggerQueue.add(new QueuedFunction(function, scope));

@@ -19,6 +19,7 @@ public class Trigger implements CHandle {
 	private int evalCount;
 	private int execCount;
 	private boolean enabled = true;
+  private boolean sleeping = false;
 	// used for eval
 	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
 	private boolean waitOnSleeps = true;
@@ -68,14 +69,18 @@ public class Trigger implements CHandle {
 		if (!this.enabled) {
 			return;
 		}
-		for (JassFunction action : this.actions) {
+		for (int currentActionIndex = 0; currentActionIndex < this.actions.size(); currentActionIndex++) {
+      final JassFunction currentAction = this.actions.get(currentActionIndex);
 			try {
-        if (action instanceof JassTriggerSleepActionFunction) {
-          final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) action;
+        if (currentAction instanceof JassTriggerSleepActionFunction) {
+          final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) currentAction;
           final double sleepTime = sleepAction.getSleepTime();
-          
+          SleepingTrigger sleepingTrigger = new SleepingTrigger();
+          sleepingTrigger.scheduleWakeup(sleepTime, globalScope, triggerScope, this::execute);
+          currentActionIndex++;
+          break;
         } else {
-				  action.call(Collections.emptyList(), globalScope, triggerScope);
+				  currentAction.call(Collections.emptyList(), globalScope, triggerScope);
         }
 			}
 			catch (final Exception e) {
@@ -93,6 +98,10 @@ public class Trigger implements CHandle {
 	public boolean isEnabled() {
 		return this.enabled;
 	}
+
+  public boolean isSleeping() {
+    return this.sleeping;
+  }
 
 	public void setEnabled(final boolean enabled) {
 		this.enabled = enabled;
@@ -123,5 +132,4 @@ public class Trigger implements CHandle {
 	public int getHandleId() {
 		return this.handleId;
 	}
-
 }
