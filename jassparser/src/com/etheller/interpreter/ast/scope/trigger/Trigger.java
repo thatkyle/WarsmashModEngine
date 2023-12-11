@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassTriggerSleepActionFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.util.CHandle;
@@ -67,9 +68,15 @@ public class Trigger implements CHandle {
 		if (!this.enabled) {
 			return;
 		}
-		for (final JassFunction action : this.actions) {
+		for (JassFunction action : this.actions) {
 			try {
-				action.call(Collections.emptyList(), globalScope, triggerScope);
+        if (action instanceof JassTriggerSleepActionFunction) {
+          final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) action;
+          final double sleepTime = sleepAction.getSleepTime();
+          
+        } else {
+				  action.call(Collections.emptyList(), globalScope, triggerScope);
+        }
 			}
 			catch (final Exception e) {
 				if ((e.getMessage() != null) && e.getMessage().startsWith("Needs to sleep")) {

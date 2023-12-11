@@ -23,6 +23,7 @@ import com.etheller.interpreter.JassLexer;
 import com.etheller.interpreter.JassParser;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassTriggerSleepActionFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
@@ -2852,10 +2853,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
-						final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						if (time != 0) {
-							throw new JassException(globalScope, "Needs to sleep " + time, null);
-						}
+						final double sleepTime = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+						final JassTriggerSleepActionFunction triggerSleepActionFunction = 
+              (JassTriggerSleepActionFunction) arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+            triggerSleepActionFunction.setSleepTime(sleepTime);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectTarget",
