@@ -25,11 +25,13 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassTriggerSleepActionFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
+import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
@@ -2854,8 +2856,19 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
 						final double sleepTime = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						final JassFunction triggerSleepActionFunction = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
-            ((JassTriggerSleepActionFunction) triggerSleepActionFunction).setSleepTime(sleepTime);
+            JassStatement sleepStatement = new JassStatement() {
+              @Override
+              public boolean isSleep() {
+                return true;
+              }
+
+              @Override
+              public JassValue execute(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope) {
+                return null;
+              }
+            };
+						// final JassFunction triggerSleepActionFunction = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+            // ((JassTriggerSleepActionFunction) triggerSleepActionFunction).setSleepTime(sleepTime);
             // May need to return triggerSleepActionFunction
 						return null;
 					});

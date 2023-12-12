@@ -11,6 +11,10 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.JassValue;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class JassCallStatement implements JassStatement {
 	private final String functionName;
 	private final List<JassExpression> arguments;
@@ -20,27 +24,51 @@ public class JassCallStatement implements JassStatement {
 		this.arguments = arguments;
 	}
 
+  public String getFunctionName() {
+    return this.functionName;
+  }
+
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {
 		final JassFunction functionByName = globalScope.getFunctionByName(this.functionName);
-		if (functionByName == null) {
-			if (JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
-				System.err.println("Undefined function: " + this.functionName);
-			}
-			else {
-				throw new RuntimeException("Undefined function: " + this.functionName);
-			}
-			return null;
-		}
-		final List<JassValue> evaluatedExpressions = new ArrayList<>();
-		for (final JassExpression expr : this.arguments) {
-			final JassValue evaluatedExpression = expr.evaluate(globalScope, localScope, triggerScope);
-			evaluatedExpressions.add(evaluatedExpression);
-		}
-		functionByName.call(evaluatedExpressions, globalScope, triggerScope);
-		// throw away return value
-		return null;
+    if (functionByName == null) {
+      if (JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
+        System.err.println("Undefined function: " + this.functionName);
+      }
+      else {
+        throw new RuntimeException("Undefined function: " + this.functionName);
+      }
+      return null;
+    }
+    final List<JassValue> evaluatedExpressions = new ArrayList<>();
+    for (final JassExpression expr : this.arguments) {
+      final JassValue evaluatedExpression = expr.evaluate(globalScope, localScope, triggerScope);
+      evaluatedExpressions.add(evaluatedExpression);
+    }
+    if (this.functionName.equals("TriggerSleepAction")) {
+      // Create a ScheduledExecutorService
+      ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+      try {
+          // Schedule a task to be executed after a 3 second delay
+          executorService.schedule(() -> {
+              // Task to be executed after the delay
+              functionByName.call(evaluatedExpressions, globalScope, triggerScope);
+          }, 3, TimeUnit.SECONDS);
+
+          // Wait for the scheduled task to complete
+          executorService.shutdown();
+          executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+          return null;
+      } catch (InterruptedException e) {
+          Thread.currentThread().interrupt(); // Restore interrupted state
+          throw new RuntimeException(e);
+      }
+    } else {
+      functionByName.call(evaluatedExpressions, globalScope, triggerScope);
+      // throw away return value
+      return null;
+    }
 	}
 
 }

@@ -49,6 +49,7 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 	@Override
 	public JassStatement visitCallStatement(final CallStatementContext ctx) {
 		try {
+      System.err.println(ctx.functionExpression().ID().getText());
 			return wrap(ctx.getStart().getLine(), new JassCallStatement(ctx.functionExpression().ID().getText(),
 					this.argumentExpressionHandler.argumentsVisitor.visit(ctx.functionExpression().argsList())));
 		}
