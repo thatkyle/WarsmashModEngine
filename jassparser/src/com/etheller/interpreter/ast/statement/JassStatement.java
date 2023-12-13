@@ -6,9 +6,6 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public interface JassStatement {
-	default boolean isSleep() {
-		return false;
-	}
 	// When a value is returned, this indicates a RETURN statement,
 	// and will end outer execution
 	JassValue execute(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope);

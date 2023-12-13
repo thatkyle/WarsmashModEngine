@@ -2856,17 +2856,17 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
 						final double sleepTime = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-            JassStatement sleepStatement = new JassStatement() {
-              @Override
-              public boolean isSleep() {
-                return true;
-              }
+            // JassStatement sleepStatement = new JassStatement() {
+            //   @Override
+            //   public boolean isSleep() {
+            //     return true;
+            //   }
 
-              @Override
-              public JassValue execute(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope) {
-                return null;
-              }
-            };
+            //   @Override
+            //   public JassValue execute(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope) {
+            //     return null;
+            //   }
+            // };
 						// final JassFunction triggerSleepActionFunction = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
             // ((JassTriggerSleepActionFunction) triggerSleepActionFunction).setSleepTime(sleepTime);
             // May need to return triggerSleepActionFunction

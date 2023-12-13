@@ -73,12 +73,12 @@ public class Trigger implements CHandle {
       final JassFunction currentAction = this.actions.get(currentActionIndex);
 			try {
         if (currentAction instanceof JassTriggerSleepActionFunction) {
-          final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) currentAction;
-          final double sleepTime = sleepAction.getSleepTime();
-          SleepingTrigger sleepingTrigger = new SleepingTrigger();
-          sleepingTrigger.scheduleWakeup(sleepTime, globalScope, triggerScope, this::execute);
-          currentActionIndex++;
-          break;
+          // final JassTriggerSleepActionFunction sleepAction = (JassTriggerSleepActionFunction) currentAction;
+          // final double sleepTime = sleepAction.getSleepTime();
+          // SleepingTrigger sleepingTrigger = new SleepingTrigger();
+          // sleepingTrigger.scheduleWakeup(sleepTime, globalScope, triggerScope, this::execute);
+          // currentActionIndex++;
+          // break;
         } else {
 				  currentAction.call(Collections.emptyList(), globalScope, triggerScope);
         }

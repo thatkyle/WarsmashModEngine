@@ -49,7 +49,7 @@ public class JassCallStatement implements JassStatement {
     if (this.functionName.equals("TriggerSleepAction")) {
       // Create a ScheduledExecutorService
       ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-      try {
+      // try {
           // Schedule a task to be executed after a 3 second delay
           executorService.schedule(() -> {
               // Task to be executed after the delay
@@ -58,12 +58,12 @@ public class JassCallStatement implements JassStatement {
 
           // Wait for the scheduled task to complete
           executorService.shutdown();
-          executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+          // executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
           return null;
-      } catch (InterruptedException e) {
-          Thread.currentThread().interrupt(); // Restore interrupted state
-          throw new RuntimeException(e);
-      }
+      // } catch (InterruptedException e) {
+      //     Thread.currentThread().interrupt(); // Restore interrupted state
+      //     throw new RuntimeException(e);
+      // }
     } else {
       functionByName.call(evaluatedExpressions, globalScope, triggerScope);
       // throw away return value

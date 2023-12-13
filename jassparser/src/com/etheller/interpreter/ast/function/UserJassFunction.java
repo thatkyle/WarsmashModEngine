@@ -6,11 +6,16 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.statement.JassCallStatement;
 import com.etheller.interpreter.ast.statement.JassReturnNothingStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Not a native
@@ -30,8 +35,21 @@ public final class UserJassFunction extends AbstractJassFunction {
 	@Override
 	public JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope, final LocalScope localScope) {
-		for (final JassStatement statement : this.statements) {
-			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
+		for (int currentStatementIx = 0; currentStatementIx < this.statements.size(); currentStatementIx++) {
+			JassStatement currentStatement = this.statements.get(currentStatementIx);
+			if (currentStatement instanceof JassCallStatement) {
+				if (((JassCallStatement) currentStatement).getFunctionName().equals("TriggerSleepAction")) {
+					ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+					executorService.schedule(() -> {
+						currentStatement.execute(globalScope, localScope, triggerScope);
+						this.innerCall(arguments, globalScope, triggerScope, localScope);
+					}, 3, TimeUnit.SECONDS);
+					executorService.shutdown();
+					currentStatementIx ++;
+					break;
+				}
+      }
+			final JassValue returnValue = currentStatement.execute(globalScope, localScope, triggerScope);
 			if (returnValue != null) {
 				if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {
 					if ((this.returnType == JassType.NOTHING)
