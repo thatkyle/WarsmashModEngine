@@ -3,6 +3,8 @@ package com.etheller.interpreter.ast.scope.trigger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
@@ -21,6 +23,8 @@ public class Trigger implements CHandle {
 	// used for eval
 	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
 	private boolean waitOnSleeps = true;
+  private int currentActionIndex = 0;
+  private boolean isActionPaused = false;
 
 	public int addAction(final JassFunction function) {
 		final int index = this.actions.size();
@@ -54,6 +58,11 @@ public class Trigger implements CHandle {
 		return this.execCount;
 	}
 
+  public void setIsActionPaused(boolean isActionPaused) {
+    System.err.println("Setting isActionPaused to " + isActionPaused);
+    this.isActionPaused = isActionPaused;
+  }
+
 	public boolean evaluate(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
 		for (final TriggerBooleanExpression condition : this.conditions) {
 			if (!condition.evaluate(globalScope, triggerScope)) {
@@ -63,13 +72,38 @@ public class Trigger implements CHandle {
 		return true;
 	}
 
+  private void replayTrigger(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
+    System.err.println("Schedule replaying trigger");
+    Trigger trigger = this;
+    Timer timer = new Timer();
+    long delay = 3000L;
+    timer.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        System.err.println("Execute replaying trigger");
+        trigger.isActionPaused = false;
+        trigger.execute(globalScope, triggerScope);
+      }
+    }, delay);
+  }
+
 	public void execute(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
 		if (!this.enabled) {
+      // it may not actually be safe to reset currentActionIndex if this if a trigger with a sleepAction that is disabled and then re-enabled
+      this.currentActionIndex = 0;
 			return;
 		}
-		for (final JassFunction action : this.actions) {
+		for (; this.currentActionIndex < this.actions.size(); this.currentActionIndex++) {
+      final JassFunction action = this.actions.get(this.currentActionIndex);
 			try {
 				action.call(Collections.emptyList(), globalScope, triggerScope);
+        System.err.println("Executed action " + action);
+        if (this.isActionPaused) {
+          System.err.println("Action paused");
+          // don't increment currentActionIndex, we want to execute this action again
+          replayTrigger(globalScope, triggerScope);
+          return;
+        }
 			}
 			catch (final Exception e) {
 				if ((e.getMessage() != null) && e.getMessage().startsWith("Needs to sleep")) {
@@ -81,6 +115,7 @@ public class Trigger implements CHandle {
 				}
 			}
 		}
+    this.currentActionIndex = 0;
 	}
 
 	public boolean isEnabled() {

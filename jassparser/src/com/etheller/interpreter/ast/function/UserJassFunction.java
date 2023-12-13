@@ -40,10 +40,10 @@ public final class UserJassFunction extends AbstractJassFunction {
       if (statement instanceof JassCallStatement) {
         if (((JassCallStatement) statement).getFunctionName().equals("TriggerSleepAction")) {
           final JassExpression sleepTime = ((JassCallStatement) statement).getArguments().get(0);
-          System.err.println("Sleeping");
           System.err.println("Sleeping for " + sleepTime);
-          // final int sleepTimeInt = sleepTime.visit(JassTypeGettingValueVisitor.getInstance()).getIntegerValue();
-          // triggerScope.sleep(sleepTimeInt);
+          this.currentStatementIndex++;
+          triggerScope.getTriggeringTrigger().setIsActionPaused(true);
+          return null;
         }
       }
 			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
