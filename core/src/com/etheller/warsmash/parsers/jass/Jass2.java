@@ -2853,9 +2853,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
 						final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						if (time != 0) {
-							throw new JassException(globalScope, "Needs to sleep " + time, null);
-						}
+						// if (time != 0) {
+						// 	throw new JassException(globalScope, "Needs to sleep " + time, null);
+						// }
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectTarget",

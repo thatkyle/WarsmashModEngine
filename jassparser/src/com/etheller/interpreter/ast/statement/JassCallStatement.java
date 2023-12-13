@@ -19,6 +19,23 @@ public class JassCallStatement implements JassStatement {
 		this.functionName = functionName;
 		this.arguments = arguments;
 	}
+  
+  public String getFunctionName() {
+    return this.functionName;
+  }
+
+  public List<JassExpression> getArguments() {
+    return this.arguments;
+  }
+  
+  public List<JassValue> getEvaluatedExpressions(GlobalScope globalScope, LocalScope localScope, TriggerExecutionScope triggerScope) {
+    final List<JassValue> evaluatedExpressions = new ArrayList<>();
+		for (final JassExpression expr : this.arguments) {
+			final JassValue evaluatedExpression = expr.evaluate(globalScope, localScope, triggerScope);
+			evaluatedExpressions.add(evaluatedExpression);
+		}
+    return evaluatedExpressions;
+  }
 
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
