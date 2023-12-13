@@ -21,6 +21,16 @@ public class Trigger implements CHandle {
 	// used for eval
 	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
 	private boolean waitOnSleeps = true;
+  private boolean isTimerSleepActionActive = false;
+  private int currentActionIndex = 0;
+
+  public boolean getIsTimerSleepActionActive() {
+    return isTimerSleepActionActive;
+  }
+
+  public void setIsTimerSleepActionActive(boolean isTimerSleepActionActive) {
+    this.isTimerSleepActionActive = isTimerSleepActionActive;
+  }
 
 	public int addAction(final JassFunction function) {
 		final int index = this.actions.size();
@@ -64,12 +74,17 @@ public class Trigger implements CHandle {
 	}
 
 	public void execute(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
-		if (!this.enabled) {
+		if (!this.enabled || !this.isTimerSleepActionActive) {
 			return;
 		}
-		for (final JassFunction action : this.actions) {
+    for (; this.currentActionIndex < this.actions.size(); this.currentActionIndex++) {
+      JassFunction currentAction = this.actions.get(currentActionIndex);
 			try {
-				action.call(Collections.emptyList(), globalScope, triggerScope);
+				currentAction.call(Collections.emptyList(), globalScope, triggerScope);
+        if (this.isTimerSleepActionActive) {
+          // don't increment the currentActionIndex, we want to resume from this action
+          return;
+        }
 			}
 			catch (final Exception e) {
 				if ((e.getMessage() != null) && e.getMessage().startsWith("Needs to sleep")) {

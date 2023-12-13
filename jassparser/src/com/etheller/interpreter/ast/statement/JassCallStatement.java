@@ -20,6 +20,10 @@ public class JassCallStatement implements JassStatement {
 		this.arguments = arguments;
 	}
 
+  public String getFunctionName() {
+    return this.functionName;
+  }
+
 	@Override
 	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
 			final TriggerExecutionScope triggerScope) {

@@ -58,6 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManage
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJassTriggerSleepAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
@@ -98,6 +99,9 @@ public class CSimulation implements CPlayerAPI {
 	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
 	private final List<CTimer> addedTimers = new ArrayList<>();
 	private final List<CTimer> removedTimers = new ArrayList<>();
+	private final LinkedList<CTimerJassTriggerSleepAction> activeTriggerSleepActionTimers = new LinkedList<>();
+	private final List<CTimerJassTriggerSleepAction> addedTriggerSleepActionTimers = new ArrayList<>();
+	private final List<CTimerJassTriggerSleepAction> removedTriggerSleepActionTimers = new ArrayList<>();
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayVariableEvent> timeOfDayVariableEvents = new ArrayList<>();
@@ -243,6 +247,31 @@ public class CSimulation implements CPlayerAPI {
 
 	public void internalUnregisterTimer(final CTimer timer) {
 		this.activeTimers.remove(timer);
+	}
+
+  public void registerTriggerSleepActionTimer(final CTimerJassTriggerSleepAction triggerSleepActionTimer) {
+		this.addedTriggerSleepActionTimers.add(triggerSleepActionTimer);
+	}
+
+	public void unregisterTriggerSleepActionTimer(final CTimerJassTriggerSleepAction triggerSleepActionTimer) {
+		this.removedTriggerSleepActionTimers.add(triggerSleepActionTimer);
+	}
+
+	private void internalRegisterTriggerSleepActionTimer(final CTimerJassTriggerSleepAction triggerSleepActionTimer) {
+		final ListIterator<CTimerJassTriggerSleepAction> listIterator = this.activeTriggerSleepActionTimers.listIterator();
+		while (listIterator.hasNext()) {
+			final CTimerJassTriggerSleepAction nextTriggerSleepActionTimer = listIterator.next();
+			if (nextTriggerSleepActionTimer.getEngineFireTick() > triggerSleepActionTimer.getEngineFireTick()) {
+				listIterator.previous();
+				listIterator.add(triggerSleepActionTimer);
+				return;
+			}
+		}
+		this.activeTriggerSleepActionTimers.addLast(triggerSleepActionTimer);
+	}
+
+	public void internalUnregisterTriggerSleepActionTimer(final CTimerJassTriggerSleepAction triggerSleepActionTimer) {
+		this.activeTriggerSleepActionTimers.remove(triggerSleepActionTimer);
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
@@ -438,6 +467,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 		this.addedTimers.clear();
 		final Set<CTimer> timers = new HashSet<>();
+    // CTimer update procedures
 		for (final CTimer timer : this.activeTimers) {
 			if (!timers.add(timer)) {
 				throw new IllegalStateException("Duplicate timer add: " + timer);
@@ -449,7 +479,25 @@ public class CSimulation implements CPlayerAPI {
 		for (final CTimer timer : this.removedTimers) {
 			internalUnregisterTimer(timer);
 		}
-		this.removedTimers.clear();
+		this.removedTriggerSleepActionTimers.clear();
+    // CTimerJassTriggerSleepAction update procedures
+    for (final CTimerJassTriggerSleepAction triggerSleepActionTimer : this.addedTriggerSleepActionTimers) {
+			internalRegisterTriggerSleepActionTimer(triggerSleepActionTimer);
+		}
+		this.addedTriggerSleepActionTimers.clear();
+		final Set<CTimerJassTriggerSleepAction> triggerSleepActionTimers = new HashSet<>();
+		for (final CTimerJassTriggerSleepAction triggerSleepActionTimer : this.activeTriggerSleepActionTimers) {
+			if (!triggerSleepActionTimers.add(triggerSleepActionTimer)) {
+				throw new IllegalStateException("Duplicate timer add: " + triggerSleepActionTimer);
+			}
+		}
+    while (!this.activeTriggerSleepActionTimers.isEmpty() && (this.activeTriggerSleepActionTimers.peek().getEngineFireTick() <= this.gameTurnTick)) {
+			this.activeTriggerSleepActionTimers.pop().fire(this);
+		}
+		for (final CTimerJassTriggerSleepAction timer : this.removedTriggerSleepActionTimers) {
+			internalUnregisterTriggerSleepActionTimer(timer);
+		}
+    this.removedTriggerSleepActionTimers.clear();
 		for (final TimeOfDayVariableEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
 			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
 				timeOfDayEvent.fire();

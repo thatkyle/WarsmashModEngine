@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJassTriggerSleepAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
@@ -30,6 +31,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CPlayerJass filterPlayer;
 	private CPlayerJass enumPlayer;
 	private CTimerJass expiringTimer;
+  private CTimerJassTriggerSleepAction expiringTriggerSleepActionTimer;
 	private CUnit enteringUnit;
 	private CUnit leavingUnit;
 	private CRegion triggeringRegion;
@@ -116,6 +118,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.filterPlayer = parentScope.filterPlayer;
 		this.enumPlayer = parentScope.enumPlayer;
 		this.expiringTimer = parentScope.expiringTimer;
+    this.expiringTriggerSleepActionTimer = parentScope.expiringTriggerSleepActionTimer;
 		this.enteringUnit = parentScope.enteringUnit;
 		this.leavingUnit = parentScope.leavingUnit;
 		this.triggeringRegion = parentScope.triggeringRegion;
@@ -206,6 +209,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public CTimerJass getExpiringTimer() {
 		return this.expiringTimer;
+	}
+
+  public CTimerJassTriggerSleepAction getExpiringTriggerSleepActionTimer() {
+		return this.expiringTriggerSleepActionTimer;
 	}
 
 	public CUnit getEnteringUnit() {
@@ -485,6 +492,12 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope expiringTimer(final Trigger trigger, final CTimerJass cTimerJass) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.expiringTimer = cTimerJass;
+		return scope;
+	}
+
+  public static CommonTriggerExecutionScope expiringTriggerSleepActionTimer(final Trigger trigger, final CTimerJassTriggerSleepAction cTimerJassTriggerSleepAction) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.expiringTriggerSleepActionTimer = cTimerJassTriggerSleepAction;
 		return scope;
 	}
 
