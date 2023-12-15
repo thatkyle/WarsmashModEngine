@@ -36,16 +36,16 @@ public final class UserJassFunction extends AbstractJassFunction {
 		// for (final JassStatement statement : this.statements) {
     for (; this.currentStatementIndex < this.statements.size(); this.currentStatementIndex++) {
       final JassStatement statement = this.statements.get(this.currentStatementIndex);
-      System.err.println("Executing " + statement);
-      if (statement instanceof JassCallStatement) {
-        if (((JassCallStatement) statement).getFunctionName().equals("TriggerSleepAction")) {
-          final JassExpression sleepTime = ((JassCallStatement) statement).getArguments().get(0);
-          System.err.println("Sleeping for " + sleepTime);
-          this.currentStatementIndex++;
-          triggerScope.getTriggeringTrigger().setIsActionPaused(true);
-          return null;
-        }
+      if (triggerScope.getTriggeringTrigger().getIsActionPaused()) {
+        System.err.println("UserJassFunction: Action is paused, returning");
+        return null;
       }
+      // if (statement instanceof JassCallStatement) {
+      //   if (((JassCallStatement) statement).getFunctionName().equals("TriggerSleepAction")) {
+      //     this.currentStatementIndex++;
+      //     return null;
+      //   }
+      // }
 			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
 			if (returnValue != null) {
 				if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {

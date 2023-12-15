@@ -2854,6 +2854,9 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final Double timeout = arguments.get(0).visit(RealJassValueVisitor.getInstance());
             Trigger trigger = triggerScope.getTriggeringTrigger();
+            // Pause the current trigger execution
+            trigger.setIsActionPaused(true);
+            // Create new TriggerRegisterTimerEvent
 						final CTimerNativeEvent timer = new CTimerNativeEvent(globalScope, trigger);
 						timer.setRepeats(false);
 						timer.setTimeoutTime(timeout.floatValue());

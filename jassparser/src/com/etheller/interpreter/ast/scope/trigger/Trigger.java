@@ -58,6 +58,10 @@ public class Trigger implements CHandle {
 		return this.execCount;
 	}
 
+  public boolean getIsActionPaused() {
+    return this.isActionPaused;
+  }
+
   public void setIsActionPaused(boolean isActionPaused) {
     System.err.println("Setting isActionPaused to " + isActionPaused);
     this.isActionPaused = isActionPaused;
@@ -72,20 +76,19 @@ public class Trigger implements CHandle {
 		return true;
 	}
 
-  private void replayTrigger(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
-    System.err.println("Schedule replaying trigger");
-    Trigger trigger = this;
-    Timer timer = new Timer();
-    long delay = 3000L;
-    timer.schedule(new TimerTask() {
-      @Override
-      public void run() {
-        System.err.println("Execute replaying trigger");
-        trigger.isActionPaused = false;
-        trigger.execute(globalScope, triggerScope);
-      }
-    }, delay);
-  }
+  // private void replayTrigger(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
+  //   Trigger trigger = this;
+  //   Timer timer = new Timer();
+  //   long delay = 3000L;
+  //   timer.schedule(new TimerTask() {
+  //     @Override
+  //     public void run() {
+  //       System.err.println("Execute replaying trigger");
+  //       trigger.isActionPaused = false;
+  //       trigger.execute(globalScope, triggerScope);
+  //     }
+  //   }, delay);
+  // }
 
 	public void execute(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
 		if (!this.enabled) {
@@ -97,11 +100,9 @@ public class Trigger implements CHandle {
       final JassFunction action = this.actions.get(this.currentActionIndex);
 			try {
 				action.call(Collections.emptyList(), globalScope, triggerScope);
-        System.err.println("Executed action " + action);
         if (this.isActionPaused) {
-          System.err.println("Action paused");
-          // don't increment currentActionIndex, we want to execute this action again
-          replayTrigger(globalScope, triggerScope);
+          System.err.println("Trigger: Action paused, returning");
+          // replayTrigger(globalScope, triggerScope);
           return;
         }
 			}
