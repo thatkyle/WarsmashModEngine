@@ -19,8 +19,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.etheller.interpreter.JassLexer;
-import com.etheller.interpreter.JassParser;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -48,6 +46,8 @@ import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
 import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.jassparser.JassLexer;
+import com.etheller.warsmash.jassparser.JassParser;
 import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
@@ -2852,11 +2852,16 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
-						final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						// if (time != 0) {
-						// 	throw new JassException(globalScope, "Needs to sleep " + time, null);
-						// }
-						return null;
+						final Double timeout = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+            Trigger trigger = triggerScope.getTriggeringTrigger();
+						final CTimerNativeEvent timer = new CTimerNativeEvent(globalScope, trigger);
+						timer.setRepeats(false);
+						timer.setTimeoutTime(timeout.floatValue());
+						timer.start(CommonEnvironment.this.simulation);
+						new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
+							CommonEnvironment.this.simulation.unregisterTimer(timer);
+						});
+            return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectTarget",
 					(arguments, globalScope, triggerScope) -> {
